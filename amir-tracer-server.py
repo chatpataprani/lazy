@@ -1538,16 +1538,28 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         api_url = f"https://hum-garib-hai.xo.je/api.php?rc={urllib.parse.quote(rc)}"
         req = urllib.request.Request(api_url, headers={
-            "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "en-IN,en;q=0.9,hi;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
             "Referer": "https://hum-garib-hai.xo.je/",
             "Origin": "https://hum-garib-hai.xo.je",
+            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
             "Connection": "keep-alive",
         })
 
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:
                 body = resp.read()
             # Validate JSON
             json.loads(body)
@@ -1557,7 +1569,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         except urllib.error.HTTPError as e:
-            self._json_error(502, f"API HTTP error: {e.code}")
+            # Read error body for debugging
+            try:
+                err_body = e.read().decode("utf-8", errors="ignore")[:500]
+            except:
+                err_body = ""
+            self._json_error(502, f"API HTTP {e.code}: {err_body}")
         except Exception as e:
             self._json_error(500, str(e))
 
