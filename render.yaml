@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: amir-tracer
+    name: chatpata-tracer
     runtime: python
-    buildCommand: ""
+    buildCommand: "echo build"
     startCommand: python3 amir-tracer-server.py
     envVars:
       - key: PORT
